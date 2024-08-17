@@ -4,7 +4,7 @@ import { Button, Typography, Paper } from '@mui/material';
 
 interface ItemOrderingQuestionProps {
   question: {
-    id: number;
+    id: string;
     question: string;
     options: string[];
     answer: string[];
@@ -12,7 +12,10 @@ interface ItemOrderingQuestionProps {
   onAnswer: (answer: string[]) => void;
 }
 
-const ItemOrderingQuestion: React.FC<ItemOrderingQuestionProps> = ({ question, onAnswer }) => {
+const ItemOrderingQuestion: React.FC<ItemOrderingQuestionProps> = ({
+  question,
+  onAnswer,
+}) => {
   const [items, setItems] = useState(question.options);
 
   const handleDragEnd = (result: any) => {
@@ -46,7 +49,7 @@ const ItemOrderingQuestion: React.FC<ItemOrderingQuestionProps> = ({ question, o
                         padding: '16px',
                         marginBottom: '8px',
                         backgroundColor: '#fff',
-                        ...provided.draggableProps.style
+                        ...provided.draggableProps.style,
                       }}
                     >
                       <Typography variant="body1" gutterBottom>
@@ -61,11 +64,17 @@ const ItemOrderingQuestion: React.FC<ItemOrderingQuestionProps> = ({ question, o
           )}
         </Droppable>
       </DragDropContext>
-      <Button variant="contained" color="primary" onClick={() => onAnswer(items)}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => onAnswer(items)}
+      >
         Submit
       </Button>
       <Typography variant="body1" color="primary">
-        {JSON.stringify(items) === JSON.stringify(question.answer) ? 'Correct!' : 'Incorrect.'}
+        {JSON.stringify(items) === JSON.stringify(question.answer)
+          ? 'Correct!'
+          : 'Incorrect.'}
       </Typography>
     </div>
   );

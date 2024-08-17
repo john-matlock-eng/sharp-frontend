@@ -16,10 +16,7 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
 }) => {
   return (
     <ButtonGroup>
-      <Button
-        onClick={prevQuestion}
-        disabled={currentQuestionIndex === 0}
-      >
+      <Button onClick={prevQuestion} disabled={currentQuestionIndex === 0}>
         Previous
       </Button>
       <Button

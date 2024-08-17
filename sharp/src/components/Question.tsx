@@ -6,45 +6,53 @@ import LongFormQuestion from './LongFormQuestion';
 import ItemOrderingQuestion from './ItemOrderingQuestion';
 
 interface QuestionBase {
-  id: number;
+  id: string;
   question: string;
-  answer: any;
+  answer: string[]; // Always an array of strings
 }
 
-interface MultipleChoiceQuestion extends QuestionBase {
+interface MultipleChoiceQuestionType extends QuestionBase {
   type: 'multiple_choice';
   options: string[];
-  answer: string;
 }
 
-interface FlashCardQuestion extends QuestionBase {
+interface FlashCardQuestionType extends QuestionBase {
   type: 'flashcard';
-  answer: string;
 }
 
-interface LongFormQuestion extends QuestionBase {
+interface LongFormQuestionType extends QuestionBase {
   type: 'long_form';
-  answer: string;
 }
 
-interface ItemOrderingQuestion extends QuestionBase {
+interface ItemOrderingQuestionType extends QuestionBase {
   type: 'item_ordering';
   options: string[];
-  answer: string[];
 }
 
-type QuestionType = MultipleChoiceQuestion | FlashCardQuestion | LongFormQuestion | ItemOrderingQuestion;
+export type QuestionType =
+  | MultipleChoiceQuestionType
+  | FlashCardQuestionType
+  | LongFormQuestionType
+  | ItemOrderingQuestionType;
 
 interface QuestionProps {
   question: QuestionType;
-  onAnswer: (answer: any) => void;
-  answer: any;
+  onAnswer: (answer: string[]) => void;
+  answer: string[];
 }
 
 const Question: React.FC<QuestionProps> = ({ question, onAnswer, answer }) => {
+  console.log('Rendering Question Component', question);
+
   switch (question.type) {
     case 'multiple_choice':
-      return <MultipleChoiceQuestion question={question} onAnswer={onAnswer} selectedAnswer={answer} />;
+      return (
+        <MultipleChoiceQuestion
+          question={question}
+          onAnswer={onAnswer}
+          selectedAnswer={answer}
+        />
+      );
     case 'flashcard':
       return <FlashCardQuestion question={question} onAnswer={onAnswer} />;
     case 'long_form':

@@ -1,76 +1,62 @@
 import React, { useState } from 'react';
-import { Container, Typography } from '@mui/material';
+import { Container, Typography, CircularProgress } from '@mui/material';
+import { useParams } from 'react-router-dom';
 import Question from './Question';
 import QuizNavigation from './QuizNavigation';
-
-interface MultipleChoiceQuestion {
-  id: number;
-  type: 'multiple_choice';
-  question: string;
-  options: string[];
-  answer: string;
-}
-
-interface FlashCardQuestion {
-  id: number;
-  type: 'flashcard';
-  question: string;
-  answer: string;
-}
-
-interface LongFormQuestion {
-  id: number;
-  type: 'long_form';
-  question: string;
-  answer: string;
-}
-
-interface ItemOrderingQuestion {
-  id: number;
-  type: 'item_ordering';
-  question: string;
-  options: string[];
-  answer: string[];
-}
-
-type QuestionType = MultipleChoiceQuestion | FlashCardQuestion | LongFormQuestion | ItemOrderingQuestion;
-
-const questions: QuestionType[] = [
-  {
-    id: 1,
-    type: 'multiple_choice',
-    question: 'What is the capital of France?',
-    options: ['Berlin', 'Madrid', 'Paris', 'Lisbon'],
-    answer: 'Paris'
-  },
-  {
-    id: 2,
-    type: 'flashcard',
-    question: 'Define "Encapsulation" in Object-Oriented Programming.',
-    answer: 'Encapsulation is the bundling of data with the methods that operate on that data.'
-  },
-  {
-    id: 3,
-    type: 'long_form',
-    question: 'Explain the concept of "Polymorphism" in OOP.',
-    answer: 'Polymorphism is the ability of different objects to respond to the same function call in different ways.'
-  },
-  {
-    id: 4,
-    type: 'item_ordering',
-    question: 'Order the steps of the software development lifecycle.',
-    options: ['Design', 'Testing', 'Implementation', 'Requirement Analysis'],
-    answer: ['Requirement Analysis', 'Design', 'Implementation', 'Testing']
-  }
-];
+import { useQuiz } from '../services/quizService';
+import { QuestionType } from './Question';
 
 const Quiz: React.FC = () => {
+  const { communityId, quizId } = useParams<{ communityId: string; quizId: string }>();
+  const { data: quizData, isLoading, error } = useQuiz(communityId!, quizId!);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<(string | string[])[]>([]);
 
+  if (isLoading) return <CircularProgress />;
+  if (error) return <Typography color="error">Error loading quiz</Typography>;
+
+  if (!quizData || !quizData.questions) {
+    return <Typography>No questions available for this quiz.</Typography>;
+  }
+
+  const questions: QuestionType[] = quizData.questions.map((q) => {
+    const commonFields = {
+      id: q.question_id,
+      question: q.question_text,
+      answer: Array.isArray(q.answer) ? q.answer : [q.answer],
+    };
+
+    switch (q.question_type) {
+      case 'multiple_choice':
+        return {
+          ...commonFields,
+          type: 'multiple_choice',
+          options: q.options || [],
+        } as QuestionType;
+      case 'flashcard':
+        return {
+          ...commonFields,
+          type: 'flashcard',
+        } as QuestionType;
+      case 'long_form':
+        return {
+          ...commonFields,
+          type: 'long_form',
+        } as QuestionType;
+      case 'item_ordering':
+        return {
+          ...commonFields,
+          type: 'item_ordering',
+          options: q.options || [],
+        } as QuestionType;
+      default:
+        throw new Error(`Unsupported question type: ${q.question_type}`);
+    }
+  });
+
   const handleAnswer = (answer: string | string[]) => {
     const newAnswers = [...answers];
-    newAnswers[currentQuestionIndex] = answer;
+    newAnswers[currentQuestionIndex] = Array.isArray(answer) ? answer : [answer];
     setAnswers(newAnswers);
   };
 
@@ -86,22 +72,31 @@ const Quiz: React.FC = () => {
     }
   };
 
+  const currentAnswer = answers[currentQuestionIndex];
+  const formattedAnswer = Array.isArray(currentAnswer) ? currentAnswer : [currentAnswer];
+
   return (
     <Container>
       <Typography variant="h3" gutterBottom>
-        Quiz
+        {quizData.title || 'Quiz'}
       </Typography>
-      <Question
-        question={questions[currentQuestionIndex]}
-        onAnswer={handleAnswer}
-        answer={answers[currentQuestionIndex]}
-      />
-      <QuizNavigation
-        currentQuestionIndex={currentQuestionIndex}
-        totalQuestions={questions.length}
-        nextQuestion={nextQuestion}
-        prevQuestion={prevQuestion}
-      />
+      {questions.length > 0 ? (
+        <>
+          <Question
+            question={questions[currentQuestionIndex]}
+            onAnswer={handleAnswer}
+            answer={formattedAnswer}
+          />
+          <QuizNavigation
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestions={questions.length}
+            nextQuestion={nextQuestion}
+            prevQuestion={prevQuestion}
+          />
+        </>
+      ) : (
+        <Typography>No questions available for this quiz.</Typography>
+      )}
     </Container>
   );
 };
